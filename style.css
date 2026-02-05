@@ -4,6 +4,11 @@
   --text-color: #333;
   --accent-color: #ff9800;
   --border-color: #ddd;
+
+  /* Block Colors Defaults */
+  --block-1-color: #ffeb3b;
+  --block-10-color: #81c784;
+  --block-100-color: #e57373;
 }
 
 * {
@@ -334,4 +339,88 @@ h2 {
 
 .hidden {
   display: none !important;
+}
+
+/* Block Styles */
+.block {
+  width: 50px;
+  height: 50px;
+  border: 2px solid #555;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+  transition: transform 0.1s;
+}
+
+.block:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+.block.val-1 {
+  background-color: var(--block-1-color);
+}
+
+.block.val-10 {
+  background-color: var(--block-10-color);
+}
+
+.block.val-100 {
+  background-color: var(--block-100-color);
+}
+
+/* Color Config Styles */
+.color-config input[type="color"] {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.color-config label {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+}
+
+/* Settings Styles */
+.settings-btn {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.settings-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.settings-panel {
+  position: absolute;
+  top: 70px;
+  left: 20px;
+  background: white;
+  border: 1px solid #ccc;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }

@@ -11,15 +11,31 @@
 <body>
     <div class="app-container">
         <header>
-            <h1>足し算・引き算 筆算支援ツール <br><span style="font-size: 0.7em;">（お金を使って考えよう）</span></h1>
+            <h1>繰り上がり・筆算支援ツール <br><span style="font-size: 0.7em;">（ブロックやお金を使って考えよう）</span></h1>
             <div class="controls">
-                <div class="op-select-group">
-                    <label for="operation">計算の種類</label>
-                    <select id="operation">
-                        <option value="add">たし算 (+)</option>
-                        <option value="sub">ひき算 (-)</option>
-                    </select>
+                <button id="settings-toggle-btn" class="settings-btn">⚙️ 設定</button>
+
+                <div id="settings-panel" class="settings-panel hidden">
+                    <div class="settings-content">
+                        <div class="mode-select-group">
+                            <label for="display-mode">モード</label>
+                            <select id="display-mode">
+                                <option value="coin">お金 (コイン)</option>
+                                <option value="block">ブロック (四角)</option>
+                            </select>
+                        </div>
+                        <div id="color-config" class="color-config hidden">
+                            <span style="font-size: 0.8em; font-weight: bold;">色設定:</span>
+                            <label><span style="font-size:0.8em">1</span><input type="color" id="color-1"
+                                    value="#ffeb3b"></label>
+                            <label><span style="font-size:0.8em">10</span><input type="color" id="color-10"
+                                    value="#81c784"></label>
+                            <label><span style="font-size:0.8em">100</span><input type="color" id="color-100"
+                                    value="#e57373"></label>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="input-group">
                     <label id="input1-label" for="input1">たされる数</label>
                     <input type="number" id="input1" value="43" min="1" max="999">
