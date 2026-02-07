@@ -392,34 +392,34 @@ function renderObjects(valOrObj, opType = null) {
 }
 
 // New helper to count blocks and update Hissan
+// New helper to count blocks and update Hissan
 function updateHissanFromBlocks() {
     if (!ui.settingAutoAnswer.checked) return; // Do not update if auto-answer is disabled
 
-    const res100 = document.getElementById('result-100');
-    const res10 = document.getElementById('result-10');
-    const res1 = document.getElementById('result-1');
+    // Slight delay to ensure DOM is ready (helper for touch devices)
+    setTimeout(() => {
+        const res100 = document.getElementById('result-100');
+        const res10 = document.getElementById('result-10');
+        const res1 = document.getElementById('result-1');
 
-    const count100 = res100.querySelectorAll('.coin, .block').length;
-    const count10 = res10.querySelectorAll('.coin, .block').length;
-    const count1 = res1.querySelectorAll('.coin, .block').length;
+        if (!res100 || !res10 || !res1) return;
 
-    // Find hissan inputs roughly based on column index
-    // 0 = 1s, 1 = 10s, 2 = 100s
-    const inp1 = document.querySelector('.hissan-input.answer-input[data-col="0"]');
-    const inp10 = document.querySelector('.hissan-input.answer-input[data-col="1"]');
-    const inp100 = document.querySelector('.hissan-input.answer-input[data-col="2"]');
+        const count100 = res100.querySelectorAll('.coin, .block').length;
+        const count10 = res10.querySelectorAll('.coin, .block').length;
+        const count1 = res1.querySelectorAll('.coin, .block').length;
 
-    // Only update if there are blocks (or clear if 0 but maybe we want to keep 0?)
-    // Actually, for standard addition, we just show the count.
-    // If it's a regrouping step, it might be > 9, but the input only holds 1 digit? 
-    // Hissan usually holds one digit. If we have 12 ones, we should technically regroup first.
-    // But let's just show the number for now or just the last digit? 
-    // User requested "naturally input".
-    // Let's show the count if > 0.
+        // Use new IDs for reliable access
+        const inp1 = document.getElementById('hissan-ans-0');   // 1s
+        const inp10 = document.getElementById('hissan-ans-1');  // 10s
+        const inp100 = document.getElementById('hissan-ans-2'); // 100s
 
-    if (inp1) inp1.value = count1 > 0 ? count1 : '';
-    if (inp10) inp10.value = count10 > 0 ? count10 : '';
-    if (inp100) inp100.value = count100 > 0 ? count100 : '';
+        if (inp1) inp1.value = count1 > 0 ? count1 : '';
+        if (inp10) inp10.value = count10 > 0 ? count10 : '';
+        if (inp100) inp100.value = count100 > 0 ? count100 : '';
+
+        // Debug
+        // console.log(`Auto-fill: 100s=${count100}, 10s=${count10}, 1s=${count1}`);
+    }, 10);
 }
 
 // Event Delegation for Drag Interactions
@@ -605,12 +605,13 @@ function renderCalculationStandard(allSteps, currentIndex, a, b, op) {
         // If AutoAnswer is TRUE: Readonly, no border (look like auto-filled text)
         // If AutoAnswer is FALSE: Editable, standard border
         const style = isAutoAnswer
-            ? "width: 30px; border: none; background: transparent; text-align: center; font-size: 2rem; font-weight: bold;"
-            : "width: 30px; border: 1px solid #aaa; text-align: center; font-size: 2rem;";
+            ? "width: 30px; border: none; background: transparent; text-align: center; font-size: 2rem; font-weight: bold; color: #000;"
+            : "width: 30px; border: 1px solid #aaa; text-align: center; font-size: 2rem; color: #000;";
 
         const readonlyAttr = isAutoAnswer ? "readonly" : "";
 
-        html += `<input type="text" class="hissan-input answer-input" data-col="${idx}" maxlength="2" ${readonlyAttr} style="${style}">`;
+        // Added ID for reliable selection
+        html += `<input type="text" id="hissan-ans-${idx}" class="hissan-input answer-input" data-col="${idx}" maxlength="2" ${readonlyAttr} style="${style}">`;
     }
 
     html += `</div>`;
