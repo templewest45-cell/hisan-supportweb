@@ -417,9 +417,27 @@ function updateHissanFromBlocks() {
         const inp10 = document.getElementById('hissan-ans-1');  // 10s
         const inp100 = document.getElementById('hissan-ans-2'); // 100s
 
-        if (inp1) inp1.value = count1 > 0 ? count1 : '';
-        if (inp10) inp10.value = count10 > 0 ? count10 : '';
-        if (inp100) inp100.value = count100 > 0 ? count100 : '';
+        // Helper to check if zone has been interacted with (text cleared)
+        // If text is "合わせる場所", it's untouched.
+        const headerText = '合わせる場所';
+        const hasStarted = (el) => el && !el.innerText.includes(headerText);
+
+        // Determine values
+        // 100s: Standard. If 0, usually empty (unless we want 050? No).
+        const val100 = count100 > 0 ? count100 : '';
+
+        // 10s: If active OR if 100s has value (e.g. 100), show 0.
+        // If it's just initialized (placeholder) and no higher digits, stay empty.
+        const show10 = hasStarted(res10) || val100 !== '';
+        const val10 = show10 ? count10 : '';
+
+        // 1s: If active OR if higher digits have value (e.g. 10, 100), show 0.
+        const show1 = hasStarted(res1) || val10 !== '' || val100 !== '';
+        const val1 = show1 ? count1 : '';
+
+        if (inp1) inp1.value = val1;
+        if (inp10) inp10.value = val10;
+        if (inp100) inp100.value = val100;
 
     }, 20); // 20ms debounce
 }
