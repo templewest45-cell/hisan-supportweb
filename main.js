@@ -202,6 +202,7 @@ function makeItem(val, type = 'minuend') {
     el.addEventListener('touchstart', handleTouchStart, { passive: false });
     el.addEventListener('touchmove', handleTouchMove, { passive: false });
     el.addEventListener('touchend', handleTouchEnd);
+    el.addEventListener('touchcancel', handleTouchEnd); // Handle cancellation like end
 
     return el;
 }
@@ -253,11 +254,14 @@ function handleTouchEnd(e) {
     if (!activeTouchEl) return;
 
     const touch = e.changedTouches[0];
-    // Find drop target (we need to hide clone temporarily or use pointer-events: none on clone)
-    // Clone already has pointer-events: none
+
+    // Hide clone specifically to ensure elementFromPoint sees 'through' it
+    // (Backup for pointer-events: none issues on some devices)
+    if (cloneEl) cloneEl.style.display = 'none';
+
     const target = document.elementFromPoint(touch.clientX, touch.clientY);
 
-    // Clean up clone
+    // Clean up clone completely
     if (cloneEl) {
         cloneEl.remove();
         cloneEl = null;
@@ -265,31 +269,30 @@ function handleTouchEnd(e) {
     activeTouchEl.classList.remove('dragging');
 
     if (target) {
-        const zone = target.closest('.place-col, .result-zone');
+        let zone = target.closest('.place-col, .result-zone');
         if (zone) {
+            // Logic to find the correct destination if dropped on parent column
+            let destZone = zone;
+            if (zone.classList.contains('place-col')) {
+                // If dropped on the column wrapper, find the result-zone inside
+                destZone = zone.querySelector('.result-zone');
+            }
+
+            if (!destZone) return;
+
             const val = parseInt(activeTouchEl.dataset.val, 10);
 
-            // Logic similar to 'drop' event
             let zoneVal = null;
-            if (zone.dataset.val) {
-                zoneVal = parseInt(zone.dataset.val, 10);
-            } else {
-                if (zone.id === 'col-100' || zone.querySelector('#col-100')) zoneVal = 100;
-                else if (zone.id === 'col-10' || zone.querySelector('#col-10')) zoneVal = 10;
-                else if (zone.id === 'col-1' || zone.querySelector('#col-1')) zoneVal = 1;
+            if (destZone.dataset.val) {
+                zoneVal = parseInt(destZone.dataset.val, 10);
             }
 
             // Move if valid
-            if (zone.classList.contains('result-zone') && val === zoneVal) {
-                if (zone.innerText === '合わせる場所') zone.innerText = '';
-                zone.appendChild(activeTouchEl);
-                checkRegroup(zone);
+            if (val === zoneVal) {
+                if (destZone.innerText === '合わせる場所') destZone.innerText = '';
+                destZone.appendChild(activeTouchEl);
+                checkRegroup(destZone);
                 updateHissanFromBlocks();
-            } else if (val === zoneVal) {
-                // Allow moving back to source area if needed? 
-                // Currently drop logic mainly handles result-zone. 
-                // If we want to allow moving back, we need to check if it's a valid container.
-                // For now, let's stick to the requested behavior (moving to result).
             }
         }
     }
