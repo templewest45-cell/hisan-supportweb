@@ -292,7 +292,8 @@ function handleTouchEnd(e) {
                 if (destZone.innerText === '合わせる場所') destZone.innerText = '';
                 destZone.appendChild(activeTouchEl);
                 checkRegroup(destZone);
-                updateHissanFromBlocks();
+                checkRegroup(zone);
+                // updateHissanFromBlocks(); // Handled by Observer
             }
         }
     }
@@ -388,16 +389,19 @@ function renderObjects(valOrObj, opType = null) {
     }
 
     // After rendering, if we are in calculation mode (objects in result zones), update hissan
+    // Observer will handle initial update as well if we added items
     updateHissanFromBlocks();
 }
 
 // New helper to count blocks and update Hissan
-// New helper to count blocks and update Hissan
+let autoFillTimeout = null;
 function updateHissanFromBlocks() {
     if (!ui.settingAutoAnswer.checked) return; // Do not update if auto-answer is disabled
 
-    // Slight delay to ensure DOM is ready (helper for touch devices)
-    setTimeout(() => {
+    // Debounce / Delay
+    if (autoFillTimeout) clearTimeout(autoFillTimeout);
+
+    autoFillTimeout = setTimeout(() => {
         const res100 = document.getElementById('result-100');
         const res10 = document.getElementById('result-10');
         const res1 = document.getElementById('result-1');
@@ -419,7 +423,7 @@ function updateHissanFromBlocks() {
 
         // Debug
         // console.log(`Auto-fill: 100s=${count100}, 10s=${count10}, 1s=${count1}`);
-    }, 10);
+    }, 20); // 20ms debounce
 }
 
 // Event Delegation for Drag Interactions
@@ -476,13 +480,36 @@ function setupInteractions() {
 
             zone.appendChild(draggedEl);
             checkRegroup(zone);
-            updateHissanFromBlocks(); // Update Hissan on drop
+            checkRegroup(zone);
+            // updateHissanFromBlocks(); // Handled by Observer
         }
     });
 }
 
 // Initial Call
+// ... (setupInteractions) ...
 setupInteractions();
+
+// Observer for Robust Auto-fill
+function setupObservers() {
+    const observer = new MutationObserver((mutations) => {
+        // Trigger update if any mutation occurs in the observed zones
+        updateHissanFromBlocks();
+    });
+
+    const config = { childList: true, subtree: true };
+
+    const res100 = document.getElementById('result-100');
+    const res10 = document.getElementById('result-10');
+    const res1 = document.getElementById('result-1');
+
+    if (res100) observer.observe(res100, config);
+    if (res10) observer.observe(res10, config);
+    if (res1) observer.observe(res1, config);
+}
+
+setupObservers();
+
 
 function checkRegroup(zone) {
     const items = zone.querySelectorAll('.coin, .block'); // Check both classes
@@ -539,7 +566,8 @@ function executeRegroup(zone, val) {
         const newItem = makeItem(nextVal, 'result');
         nextZone.appendChild(newItem);
         checkRegroup(nextZone);
-        updateHissanFromBlocks(); // Update after regroup
+        checkRegroup(nextZone);
+        // updateHissanFromBlocks(); // Handled by Observer
 
         // Auto-fill Carry Input (Only for Addition)
         if (currentOp === 'add' && ui.settingAutoCarry.checked) {
@@ -553,7 +581,7 @@ function executeRegroup(zone, val) {
             }
         }
     }
-    updateHissanFromBlocks(); // Update source zone too
+    // updateHissanFromBlocks(); // Handled by Observer
 }
 
 // ---------------------------------------------------------
