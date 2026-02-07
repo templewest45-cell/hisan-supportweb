@@ -187,7 +187,7 @@ function makeItem(val, type = 'minuend') {
         el.appendChild(img);
     }
 
-    // Drag Events
+    // Drag Events (Mouse / Desktop)
     el.addEventListener('dragstart', (e) => {
         e.dataTransfer.setData('text/plain', val);
         e.dataTransfer.effectAllowed = 'move';
@@ -198,7 +198,103 @@ function makeItem(val, type = 'minuend') {
         el.classList.remove('dragging');
     });
 
+    // Touch Events (Mobile - Instant Drag)
+    el.addEventListener('touchstart', handleTouchStart, { passive: false });
+    el.addEventListener('touchmove', handleTouchMove, { passive: false });
+    el.addEventListener('touchend', handleTouchEnd);
+
     return el;
+}
+
+// Touch Drag Helpers
+let activeTouchEl = null;
+let touchOffsetX = 0;
+let touchOffsetY = 0;
+let cloneEl = null;
+
+function handleTouchStart(e) {
+    e.preventDefault(); // Prevent scroll/context menu
+    const touch = e.touches[0];
+    activeTouchEl = e.currentTarget; // The original element
+
+    // Calculate offset
+    const rect = activeTouchEl.getBoundingClientRect();
+    touchOffsetX = touch.clientX - rect.left;
+    touchOffsetY = touch.clientY - rect.top;
+
+    // Create a clone for visual feedback
+    cloneEl = activeTouchEl.cloneNode(true);
+    cloneEl.style.position = 'fixed';
+    cloneEl.style.zIndex = '1000';
+    cloneEl.style.width = rect.width + 'px';
+    cloneEl.style.height = rect.height + 'px';
+    cloneEl.style.left = rect.left + 'px';
+    cloneEl.style.top = rect.top + 'px';
+    cloneEl.style.opacity = '0.8';
+    cloneEl.style.pointerEvents = 'none'; // Allow touch to pass through to check underlying elements
+
+    document.body.appendChild(cloneEl);
+    activeTouchEl.classList.add('dragging');
+}
+
+function handleTouchMove(e) {
+    if (!activeTouchEl || !cloneEl) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+
+    // Move clone
+    cloneEl.style.left = (touch.clientX - touchOffsetX) + 'px';
+    cloneEl.style.top = (touch.clientY - touchOffsetY) + 'px';
+
+    // Highlight drop zone? (Optional visual feedback)
+}
+
+function handleTouchEnd(e) {
+    if (!activeTouchEl) return;
+
+    const touch = e.changedTouches[0];
+    // Find drop target (we need to hide clone temporarily or use pointer-events: none on clone)
+    // Clone already has pointer-events: none
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+
+    // Clean up clone
+    if (cloneEl) {
+        cloneEl.remove();
+        cloneEl = null;
+    }
+    activeTouchEl.classList.remove('dragging');
+
+    if (target) {
+        const zone = target.closest('.place-col, .result-zone');
+        if (zone) {
+            const val = parseInt(activeTouchEl.dataset.val, 10);
+
+            // Logic similar to 'drop' event
+            let zoneVal = null;
+            if (zone.dataset.val) {
+                zoneVal = parseInt(zone.dataset.val, 10);
+            } else {
+                if (zone.id === 'col-100' || zone.querySelector('#col-100')) zoneVal = 100;
+                else if (zone.id === 'col-10' || zone.querySelector('#col-10')) zoneVal = 10;
+                else if (zone.id === 'col-1' || zone.querySelector('#col-1')) zoneVal = 1;
+            }
+
+            // Move if valid
+            if (zone.classList.contains('result-zone') && val === zoneVal) {
+                if (zone.innerText === '合わせる場所') zone.innerText = '';
+                zone.appendChild(activeTouchEl);
+                checkRegroup(zone);
+                updateHissanFromBlocks();
+            } else if (val === zoneVal) {
+                // Allow moving back to source area if needed? 
+                // Currently drop logic mainly handles result-zone. 
+                // If we want to allow moving back, we need to check if it's a valid container.
+                // For now, let's stick to the requested behavior (moving to result).
+            }
+        }
+    }
+
+    activeTouchEl = null;
 }
 
 function renderObjects(valOrObj, opType = null) {

@@ -404,9 +404,12 @@ h2 {
 
   .coin-grid {
     flex: 1;
+    display: grid;
     grid-template-columns: repeat(3, 1fr);
+    /* Force 3 columns */
     gap: 5px;
     height: 100%;
+    overflow: hidden;
   }
 
   .place-col {
@@ -416,11 +419,13 @@ h2 {
     border-width: 1px;
     background-color: rgba(255, 255, 255, 0.5);
     /* Slightly transparent */
+    overflow: hidden;
   }
 
   .col-label {
     font-size: 0.8rem;
     padding: 2px;
+    flex: 0 0 auto;
   }
 
   .coin-area {
@@ -433,6 +438,13 @@ h2 {
     /* Tighter packing */
     align-content: flex-start;
     /* Pack to top */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    /* 3 items per row inside the area */
+    justify-items: center;
+    /* Center items in their cells */
+    overflow-y: auto;
+    /* Allow scrolling if really needed, though we aim to fit */
   }
 
   .result-zone {
@@ -440,6 +452,12 @@ h2 {
     /* Smaller target */
     padding: 2px;
     font-size: 0.8rem;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    /* 5 items per row in result zone (can fit 10 in 2 rows) */
+    gap: 2px;
+    justify-items: center;
+    align-content: center;
   }
 
   /* Elements */
