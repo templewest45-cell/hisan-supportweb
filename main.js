@@ -499,7 +499,15 @@ function checkRegroup(zone) {
             btn.innerText = '10枚を 両替する！';
         }
 
-        btn.onclick = () => executeRegroup(zone, val);
+        const triggerRegroup = (e) => {
+            e.preventDefault();
+            e.stopPropagation(); // Stop propagation
+            executeRegroup(zone, val);
+        };
+
+        btn.addEventListener('click', triggerRegroup);
+        btn.addEventListener('touchend', triggerRegroup); // Ensure touch works
+
         zone.prepend(btn);
     }
 }
