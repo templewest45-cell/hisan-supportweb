@@ -421,13 +421,6 @@ function updateHissanFromBlocks() {
         if (inp10) inp10.value = count10 > 0 ? count10 : '';
         if (inp100) inp100.value = count100 > 0 ? count100 : '';
 
-        // Debug Output
-        const debugEl = document.getElementById('debug-console');
-        if (debugEl) {
-            debugEl.innerText = `Detected: 100s[${count100}] 10s[${count10}] 1s[${count1}]`;
-            debugEl.style.backgroundColor = (debugEl.style.backgroundColor === 'yellow') ? '#eee' : 'yellow'; // Flash effect
-        }
-
     }, 20); // 20ms debounce
 }
 
@@ -640,9 +633,10 @@ function renderCalculationStandard(allSteps, currentIndex, a, b, op) {
         // If AutoAnswer is TRUE: Readonly, no border (look like auto-filled text)
         // If AutoAnswer is FALSE: Editable, standard border
         // REVERT to standard style to rule out rendering issues
+        // FIX: Increased width/height and reduced font size to ensure text fits on tablet
         const style = isAutoAnswer
-            ? "width: 30px; border: 1px solid #ddd; background: #f9f9f9; text-align: center; font-size: 2rem; color: #000; opacity: 1;"
-            : "width: 30px; border: 1px solid #aaa; background: #fff; text-align: center; font-size: 2rem; color: #000;";
+            ? "width: 50px; height: 50px; border: 1px solid #ddd; background: #f9f9f9; text-align: center; font-size: 1.5rem; color: #000; opacity: 1; padding: 0; border-radius: 4px;"
+            : "width: 50px; height: 50px; border: 1px solid #aaa; background: #fff; text-align: center; font-size: 1.5rem; color: #000; padding: 0; border-radius: 4px;";
 
         const readonlyAttr = isAutoAnswer ? "readonly" : "";
 
