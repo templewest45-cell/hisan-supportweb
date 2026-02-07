@@ -430,34 +430,36 @@ h2 {
 
   .coin-area {
     flex: 1;
-    /* Grow to fill space */
     min-height: 0;
-    /* Allow shrinking */
     padding: 5px;
-    gap: 2px;
-    /* Tighter packing */
-    align-content: flex-start;
-    /* Pack to top */
+    gap: 5px;
+    display: flex;
+    /* Stack rows vertically */
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .operand-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    /* 3 items per row inside the area */
+    gap: 2px;
     justify-items: center;
-    /* Center items in their cells */
-    overflow-y: auto;
-    /* Allow scrolling if really needed, though we aim to fit */
+    width: 100%;
   }
 
   .result-zone {
-    min-height: 60px;
-    /* Smaller target */
-    padding: 2px;
+    min-height: 80px;
+    /* Increase height */
+    padding: 5px;
     font-size: 0.8rem;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    /* 5 items per row in result zone (can fit 10 in 2 rows) */
     gap: 2px;
     justify-items: center;
-    align-content: center;
+    align-content: start;
+    /* Start from top */
+    overflow-y: auto;
+    /* Allow scrolling if too many items */
   }
 
   /* Elements */
