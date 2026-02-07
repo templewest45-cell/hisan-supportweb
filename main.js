@@ -292,7 +292,7 @@ function handleTouchEnd(e) {
                 if (destZone.innerText === '合わせる場所') destZone.innerText = '';
                 destZone.appendChild(activeTouchEl);
                 checkRegroup(destZone);
-                checkRegroup(zone);
+                // checkRegroup(zone); // REMOVED: Do not check parent column, only result zone
                 // updateHissanFromBlocks(); // Handled by Observer
             }
         }
@@ -528,9 +528,11 @@ setupObservers();
 
 
 function checkRegroup(zone) {
+    const val = parseInt(zone.dataset.val, 10);
+    if (isNaN(val)) return; // Safety check: invalid zone (e.g. place-col)
+
     const items = zone.querySelectorAll('.coin, .block'); // Check both classes
     const count = items.length;
-    const val = parseInt(zone.dataset.val, 10);
 
     // Remove existing button if any to re-evaluate text (for mode switching)
     const existingBtn = zone.querySelector('.regroup-btn');
