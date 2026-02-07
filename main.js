@@ -15,14 +15,16 @@ const ui = {
     colorConfig: document.getElementById('color-config'),
     input1: document.getElementById('input1'),
     input2: document.getElementById('input2'),
-    label1: document.getElementById('input1-label'),
-    label2: document.getElementById('input2-label'),
     opDisplay: document.getElementById('operator-display'),
     startBtn: document.getElementById('start-btn'),
     // Color inputs
     color1: document.getElementById('color-1'),
     color10: document.getElementById('color-10'),
-    color100: document.getElementById('color-100')
+    color100: document.getElementById('color-100'),
+    headerAnswer: document.getElementById('header-answer'),
+    // Scaffolding Settings
+    settingAutoAnswer: document.getElementById('setting-auto-answer'),
+    settingAutoCarry: document.getElementById('setting-auto-carry')
 };
 
 // Toggle Settings
@@ -36,6 +38,15 @@ document.addEventListener('click', (e) => {
         ui.settingsPanel.classList.add('hidden');
     }
 });
+
+// Update Scaffolding Settings
+ui.settingAutoAnswer.addEventListener('change', () => {
+    // Refresh practice mode to update readonly state of inputs
+    if (currentLogic) {
+        renderPracticeMode(currentLogic.a, currentLogic.b, currentOp);
+    }
+});
+// No immediate action needed for AutoCarry change, it's checked on execution
 
 function updateMode() {
     currentMode = ui.modeSelect.value;
@@ -63,7 +74,7 @@ ui.color100.addEventListener('input', (e) => updateColor(100, e.target.value));
 
 // Initialize
 ui.modeSelect.addEventListener('change', updateMode);
-updateMode(); // Initial check
+// updateMode(); // Removed redundant call, startCalculation will handle render
 
 ui.startBtn.addEventListener('click', () => {
     const v1 = parseInt(ui.input1.value, 10);
@@ -76,6 +87,15 @@ ui.startBtn.addEventListener('click', () => {
 
     startCalculation(v1, v2);
 });
+
+// Initial Start
+ui.headerAnswer.addEventListener('input', checkAnswerHeader);
+
+const initV1 = parseInt(ui.input1.value, 10);
+const initV2 = parseInt(ui.input2.value, 10);
+startCalculation(initV1, initV2);
+
+// ... (startCalculation function) ...
 
 async function startCalculation(v1, v2) {
     console.log(`Starting ${currentOp}: ${v1}, ${v2}`);
@@ -124,25 +144,10 @@ function showSuccess() {
     }, 2000);
 }
 
-function checkAnswer() {
-    // Gather inputs
-    const answerInputs = document.querySelectorAll('.answer-input');
-    let userAnsStr = "";
+function checkAnswerHeader() {
+    if (!currentLogic) return; // Safeguard
 
-    // Find max col index
-    let maxCol = 0;
-    answerInputs.forEach(inp => maxCol = Math.max(maxCol, parseInt(inp.dataset.col)));
-
-    for (let i = maxCol; i >= 0; i--) {
-        const inp = document.querySelector(`.answer-input[data-col="${i}"]`);
-        if (inp && inp.value !== "") {
-            userAnsStr += inp.value;
-        }
-    }
-
-    if (userAnsStr === "") return; // Empty
-
-    const userVal = parseInt(userAnsStr, 10);
+    const userVal = parseInt(ui.headerAnswer.value, 10);
     const expected = (currentOp === 'add') ? (currentLogic.a + currentLogic.b) : (currentLogic.a - currentLogic.b);
 
     if (userVal === expected) {
@@ -155,13 +160,11 @@ function renderPracticeMode(a, b, op) {
     const steps = currentLogic.getSteps();
     renderCalculationStandard([], 0, a, b, op);
 
-    // Add input listeners
-    document.querySelectorAll('.hissan-input').forEach(inp => {
-        inp.addEventListener('input', checkAnswer);
-    });
-
     // Render initial objects (coins/blocks)
     renderObjects({ a: a, b: b }, op);
+
+    // Clear header answer
+    ui.headerAnswer.value = '';
 }
 
 // Helper to create a coin/block element with listeners
@@ -284,6 +287,40 @@ function renderObjects(valOrObj, opType = null) {
         appendItems(col10, 10, d.t, 'minuend');
         appendItems(col1, 1, d.o, 'minuend');
     }
+
+    // After rendering, if we are in calculation mode (objects in result zones), update hissan
+    updateHissanFromBlocks();
+}
+
+// New helper to count blocks and update Hissan
+function updateHissanFromBlocks() {
+    if (!ui.settingAutoAnswer.checked) return; // Do not update if auto-answer is disabled
+
+    const res100 = document.getElementById('result-100');
+    const res10 = document.getElementById('result-10');
+    const res1 = document.getElementById('result-1');
+
+    const count100 = res100.querySelectorAll('.coin, .block').length;
+    const count10 = res10.querySelectorAll('.coin, .block').length;
+    const count1 = res1.querySelectorAll('.coin, .block').length;
+
+    // Find hissan inputs roughly based on column index
+    // 0 = 1s, 1 = 10s, 2 = 100s
+    const inp1 = document.querySelector('.hissan-input.answer-input[data-col="0"]');
+    const inp10 = document.querySelector('.hissan-input.answer-input[data-col="1"]');
+    const inp100 = document.querySelector('.hissan-input.answer-input[data-col="2"]');
+
+    // Only update if there are blocks (or clear if 0 but maybe we want to keep 0?)
+    // Actually, for standard addition, we just show the count.
+    // If it's a regrouping step, it might be > 9, but the input only holds 1 digit? 
+    // Hissan usually holds one digit. If we have 12 ones, we should technically regroup first.
+    // But let's just show the number for now or just the last digit? 
+    // User requested "naturally input".
+    // Let's show the count if > 0.
+
+    if (inp1) inp1.value = count1 > 0 ? count1 : '';
+    if (inp10) inp10.value = count10 > 0 ? count10 : '';
+    if (inp100) inp100.value = count100 > 0 ? count100 : '';
 }
 
 // Event Delegation for Drag Interactions
@@ -340,6 +377,7 @@ function setupInteractions() {
 
             zone.appendChild(draggedEl);
             checkRegroup(zone);
+            updateHissanFromBlocks(); // Update Hissan on drop
         }
     });
 }
@@ -394,9 +432,10 @@ function executeRegroup(zone, val) {
         const newItem = makeItem(nextVal, 'result');
         nextZone.appendChild(newItem);
         checkRegroup(nextZone);
+        updateHissanFromBlocks(); // Update after regroup
 
         // Auto-fill Carry Input (Only for Addition)
-        if (currentOp === 'add') {
+        if (currentOp === 'add' && ui.settingAutoCarry.checked) {
             const carryColIdx = Math.log10(nextVal);
             const carryInput = document.querySelector(`.carry-input[data-col="${carryColIdx}"]`);
             if (carryInput) {
@@ -407,6 +446,7 @@ function executeRegroup(zone, val) {
             }
         }
     }
+    updateHissanFromBlocks(); // Update source zone too
 }
 
 // ---------------------------------------------------------
@@ -451,10 +491,19 @@ function renderCalculationStandard(allSteps, currentIndex, a, b, op) {
     // 4. Bar
     html += `<div style="grid-column: 1 / -1; border-bottom: 2px solid black;"></div>`;
 
-    // 5. Answer Row (Editable)
+    // 5. Answer Row (Editable vs Read-only based on setting)
+    const isAutoAnswer = ui.settingAutoAnswer.checked;
     for (let c = 0; c < width; c++) {
         const idx = width - 1 - c;
-        html += `<input type="text" class="hissan-input answer-input" data-col="${idx}" maxlength="1" style="width: 30px; border: 1px solid #aaa; text-align: center; font-size: 2rem;">`;
+        // If AutoAnswer is TRUE: Readonly, no border (look like auto-filled text)
+        // If AutoAnswer is FALSE: Editable, standard border
+        const style = isAutoAnswer
+            ? "width: 30px; border: none; background: transparent; text-align: center; font-size: 2rem; font-weight: bold;"
+            : "width: 30px; border: 1px solid #aaa; text-align: center; font-size: 2rem;";
+
+        const readonlyAttr = isAutoAnswer ? "readonly" : "";
+
+        html += `<input type="text" class="hissan-input answer-input" data-col="${idx}" maxlength="2" ${readonlyAttr} style="${style}">`;
     }
 
     html += `</div>`;
